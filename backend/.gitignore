@@ -1,0 +1,38 @@
+# .gitignore for Django (backend)
+
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environment
+env/
+venv/
+
+# Django specific
+*.log
+*.pot
+*.pyc
+db.sqlite3  # Exclude the local SQLite database if you're using it for development
+media/  # Exclude user-uploaded files (like images)
+
+# Local environment settings
+.env
+.env.*  # Include any additional env files like .env.development or .env.production
+
+# Static files
+staticfiles/
+static/
+
+# Coverage reports
+htmlcov/
+.coverage
+*.cover
+.hypothesis/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# PyCharm and VSCode specific
+.idea/
+.vscode/
