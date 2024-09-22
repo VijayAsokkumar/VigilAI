@@ -2,6 +2,29 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { Line } from 'react-chartjs-2';
 
+// Import and register Chart.js components
+import {
+    Chart as ChartJS,
+    CategoryScale,
+    LinearScale,
+    PointElement,
+    LineElement,
+    Title,
+    Tooltip,
+    Legend
+} from 'chart.js';
+
+// Register the necessary components for Chart.js
+ChartJS.register(
+    CategoryScale,
+    LinearScale,
+    PointElement,
+    LineElement,
+    Title,
+    Tooltip,
+    Legend
+);
+
 const StockDashboard = () => {
     const [stockData, setStockData] = useState(null);
     const [companyNews, setCompanyNews] = useState([]);
@@ -52,6 +75,27 @@ const StockDashboard = () => {
                 tension: 0.1
             }
         ]
+    };
+
+    const options = {
+        responsive: true,
+        plugins: {
+            legend: {
+                position: 'top',
+            },
+            title: {
+                display: true,
+                text: `${symbol} Stock Performance Over 6 Months`,
+            },
+        },
+        scales: {
+            x: {
+                type: 'category',  // Ensure 'category' scale is used for the x-axis
+            },
+            y: {
+                type: 'linear',  // 'linear' scale for the y-axis
+            },
+        },
     };
 
     return (
@@ -119,7 +163,7 @@ const StockDashboard = () => {
             <div>
                 <h3>6-Month Stock Performance</h3>
                 {stockPerformance.length > 0 ? (
-                    <Line data={performanceChartData} />
+                    <Line data={performanceChartData} options={options} />
                 ) : (
                     <p>No performance data available for {symbol}.</p>
                 )}
