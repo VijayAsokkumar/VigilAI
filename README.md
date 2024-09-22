@@ -1,7 +1,8 @@
 # VigilAI
 **AI-powered stock market dashboard**
 
-VigilAI is a full-stack application for tracking and analyzing stock market data, powered by AI. It provides real-time stock updates, insights, and recommendations for investors.
+VigilAI (Virtual Investment Growth Insights and Learning powered by AI) is a full-stack application for tracking and analyzing stock market data, powered by AI.
+It provides real-time stock updates, insights, and recommendations for investors.
 
 ## Features
 - Real-time stock data tracking
