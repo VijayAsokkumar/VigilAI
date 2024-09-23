@@ -26,6 +26,7 @@ ChartJS.register(
 );
 
 const StockDashboard = () => {
+    // eslint-disable-next-line
     const [stockData, setStockData] = useState(null);
     const [companyNews, setCompanyNews] = useState([]);
     const [industryNews, setIndustryNews] = useState([]);
@@ -33,6 +34,12 @@ const StockDashboard = () => {
     const [symbol, setSymbol] = useState('TCS');  // Default stock symbol
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
+    const [period, setPeriod] = useState('6mo');  // Default time period
+
+    // Pagination state for news
+    const [companyNewsPage, setCompanyNewsPage] = useState(1);
+    const [industryNewsPage, setIndustryNewsPage] = useState(1);
+    const newsPerPage = 5;  // Display 5 news items per page
 
     useEffect(() => {
         const fetchStockData = async () => {
@@ -51,8 +58,8 @@ const StockDashboard = () => {
                 const industryResponse = await axios.get(`http://localhost:8000/stocks/api/industry-news/${symbol}/`);
                 setIndustryNews(industryResponse.data);
 
-                // Fetch 6-month stock performance data
-                const performanceResponse = await axios.get(`http://localhost:8000/stocks/api/performance/${symbol}/`);
+                // Fetch stock performance data based on the selected period
+                const performanceResponse = await axios.get(`http://localhost:8000/stocks/api/performance/${symbol}/?period=${period}`);
                 setStockPerformance(performanceResponse.data);
             } catch (error) {
                 setError('Error fetching stock data');
@@ -61,14 +68,40 @@ const StockDashboard = () => {
         };
 
         fetchStockData();
-    }, [symbol]);
+    }, [symbol, period]);  // Refetch when symbol or period changes
 
-    // Data for the 6-month performance chart (using Chart.js)
+    // Pagination handlers for company news
+    const handleCompanyNewsNext = () => {
+        if (companyNewsPage < Math.ceil(companyNews.length / newsPerPage)) {
+            setCompanyNewsPage(companyNewsPage + 1);
+        }
+    };
+
+    const handleCompanyNewsPrev = () => {
+        if (companyNewsPage > 1) {
+            setCompanyNewsPage(companyNewsPage - 1);
+        }
+    };
+
+    // Pagination handlers for industry news
+    const handleIndustryNewsNext = () => {
+        if (industryNewsPage < Math.ceil(industryNews.length / newsPerPage)) {
+            setIndustryNewsPage(industryNewsPage + 1);
+        }
+    };
+
+    const handleIndustryNewsPrev = () => {
+        if (industryNewsPage > 1) {
+            setIndustryNewsPage(industryNewsPage - 1);
+        }
+    };
+
+    // Data for the stock performance chart (using Chart.js)
     const performanceChartData = {
         labels: stockPerformance.map(data => data.date), // Assuming the data has `date`
         datasets: [
             {
-                label: `${symbol} Stock Price (6 months)`,
+                label: `${symbol} Stock Price (${period})`,
                 data: stockPerformance.map(data => data.price), // Assuming the data has `price`
                 fill: false,
                 borderColor: 'rgb(75, 192, 192)',
@@ -85,18 +118,30 @@ const StockDashboard = () => {
             },
             title: {
                 display: true,
-                text: `${symbol} Stock Performance Over 6 Months`,
+                text: `${symbol} Stock Performance (${period})`,
             },
         },
         scales: {
             x: {
-                type: 'category',  // Ensure 'category' scale is used for the x-axis
+                type: 'category',  // Use category scale for the x-axis
+                title: {
+                    display: true,
+                    text: 'Date',  // Label for the x-axis
+                },
             },
             y: {
-                type: 'linear',  // 'linear' scale for the y-axis
+                type: 'linear',  // Use linear scale for the y-axis (stock price)
+                title: {
+                    display: true,
+                    text: 'Price (INR)',  // Label for the y-axis
+                },
             },
         },
     };
+
+    // Get paginated company and industry news
+    const displayedCompanyNews = companyNews.slice((companyNewsPage - 1) * newsPerPage, companyNewsPage * newsPerPage);
+    const displayedIndustryNews = industryNews.slice((industryNewsPage - 1) * newsPerPage, industryNewsPage * newsPerPage);
 
     return (
         <div>
@@ -113,8 +158,7 @@ const StockDashboard = () => {
 
             {loading && <p>Loading...</p>}
             {error && <p>{error}</p>}
-
-            {/* Stock Price Widget */}
+             {/* Stock Price Widget */}
             {stockData && (
                 <div>
                     <h2>{stockData.symbol} - {stockData.date}</h2>
@@ -127,46 +171,67 @@ const StockDashboard = () => {
                 </div>
             )}
 
-            {/* Company News Widget */}
-            <div>
-                <h3>Company News</h3>
-                {companyNews.length > 0 ? (
-                    companyNews.map((news, index) => (
-                        <div key={index}>
-                            <h4>{news.title}</h4>
-                            <p>{news.description}</p>
-                            <a href={news.url} target="_blank" rel="noopener noreferrer">Read more</a>
-                        </div>
-                    ))
-                ) : (
-                    <p>No news available for {symbol}.</p>
-                )}
+            {/* Stock Performance Period Selection */}
+            <div style={{ margin: '20px 0' }}>
+                <button onClick={() => setPeriod('1w')}>1 Week</button>
+                <button onClick={() => setPeriod('1mo')}>1 Month</button>
+                <button onClick={() => setPeriod('6mo')}>6 Months</button>
+                <button onClick={() => setPeriod('1y')}>1 Year</button>
+                <button onClick={() => setPeriod('2y')}>2 Years</button>
+                <button onClick={() => setPeriod('5y')}>5 Years</button>
             </div>
 
-            {/* Industry News Widget */}
+            {/* Stock Performance Widget (dynamic chart based on period) */}
             <div>
-                <h3>Industry News</h3>
-                {industryNews.length > 0 ? (
-                    industryNews.map((news, index) => (
-                        <div key={index}>
-                            <h4>{news.title}</h4>
-                            <p>{news.description}</p>
-                            <a href={news.url} target="_blank" rel="noopener noreferrer">Read more</a>
-                        </div>
-                    ))
-                ) : (
-                    <p>No industry news available for {symbol}'s industry.</p>
-                )}
-            </div>
-
-            {/* Stock Performance Widget (6-month chart) */}
-            <div>
-                <h3>6-Month Stock Performance</h3>
+                <h3>Stock Performance ({period})</h3>
                 {stockPerformance.length > 0 ? (
                     <Line data={performanceChartData} options={options} />
                 ) : (
                     <p>No performance data available for {symbol}.</p>
                 )}
+            </div>
+
+            {/* Flexbox layout for news widgets */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', gap: '20px', marginTop: '20px' }}>
+                {/* Company News Widget with Pagination */}
+                <div style={{ flex: 1 }}>
+                    <h3>Company News</h3>
+                    {displayedCompanyNews.length > 0 ? (
+                        displayedCompanyNews.map((news, index) => (
+                            <div key={index}>
+                                <h4>{news.title}</h4>
+                                <p>{news.description}</p>
+                                <a href={news.url} target="_blank" rel="noopener noreferrer">Read more</a>
+                            </div>
+                        ))
+                    ) : (
+                        <p>No news available for {symbol}.</p>
+                    )}
+                    <div>
+                        <button onClick={handleCompanyNewsPrev} disabled={companyNewsPage === 1}>Previous</button>
+                        <button onClick={handleCompanyNewsNext} disabled={companyNewsPage === Math.ceil(companyNews.length / newsPerPage)}>Next</button>
+                    </div>
+                </div>
+
+                {/* Industry News Widget with Pagination */}
+                <div style={{ flex: 1 }}>
+                    <h3>Industry News</h3>
+                    {displayedIndustryNews.length > 0 ? (
+                        displayedIndustryNews.map((news, index) => (
+                            <div key={index}>
+                                <h4>{news.title}</h4>
+                                <p>{news.description}</p>
+                                <a href={news.url} target="_blank" rel="noopener noreferrer">Read more</a>
+                            </div>
+                        ))
+                    ) : (
+                        <p>No industry news available for {symbol}'s industry.</p>
+                    )}
+                    <div>
+                        <button onClick={handleIndustryNewsPrev} disabled={industryNewsPage === 1}>Previous</button>
+                        <button onClick={handleIndustryNewsNext} disabled={industryNewsPage === Math.ceil(industryNews.length / newsPerPage)}>Next</button>
+                    </div>
+                </div>
             </div>
         </div>
     );

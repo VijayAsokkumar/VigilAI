@@ -77,8 +77,9 @@ def industry_news(request, symbol):
 # Endpoint for 6-month stock performance
 def stock_performance(request, symbol):
     try:
+        period = request.GET.get('period', '6mo')  # Default to 6 months if not provided
         stock = yf.Ticker(f'{symbol}.NS')  # Replace `.NS` with the appropriate suffix for NSE/BSE
-        hist = stock.history(period='6mo')  # Fetch 6-month history
+        hist = stock.history(period=period)  # Fetch 6-month history
 
         # Convert the data to a format usable by the frontend
         performance_data = [
